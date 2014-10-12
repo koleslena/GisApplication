@@ -16,8 +16,3 @@ case class AptekaDistance  (
 		name + Utils.delimeter + address + Utils.delimeter + distance
   	}
 }
-
-object AptekaDistance {
-	def apply(resource: Array[String], point: Point):AptekaDistance = 
-	  AptekaDistance(resource(0), resource(1), Point(resource(2).toDouble, resource(3).toDouble).calcDist(point)) 
-}
