@@ -1,6 +1,5 @@
-package ru.koleslena.gis.model
+package ru.koleslena.gis
 
-import ru.koleslena.gis.Utils
 
 object Distance {
 	def apply(longitude1: Double, latitude1: Double)(longitude: Double, latitude: Double) = {

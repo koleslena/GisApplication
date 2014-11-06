@@ -2,42 +2,47 @@ package ru.koleslena.gis
 
 import java.io.FileWriter
 import java.io.IOException
-import scala.collection.mutable.PriorityQueue
 import scala.io.Source
 import ru.koleslena.gis.model.AptekaDistance
-import ru.koleslena.gis.model.Point
-import ru.koleslena.gis.model.Distance
+import scala.collection.mutable.PriorityQueue
+import ru.koleslena.gis.model.AptekaDistance
 
+/**
+ * second variant of solution
+ */
 object GisApplication extends App {
 	if(args.length != 3) 
 		throw new IllegalArgumentException
 	
-	try {
-		val filename = args(0)
-		val lon = args(1).toDouble
-		val lat = args(2).toDouble
-	   
-		val queue: PriorityQueue[AptekaDistance] = new PriorityQueue()
+	def parseDouble(s: String) = try { Some(s.toDouble) } catch { case _: Throwable => None }
+	
+	val filename = args(0)
+	val lonOp = parseDouble(args(1))
+	val latOp = parseDouble(args(2))
+	
+	if(lonOp.isDefined && latOp.isDefined) {
+	  
+		val lon = lonOp.get
+		val lat = latOp.get
 
 		def convert = (x: Double) => x * Math.PI / 180
 		
 		val distance = Distance(convert(lon), convert(lat))( _: Double, _: Double)
 		
-		Source.fromFile(filename).getLines().drop(1).foreach { res =>
-		   	try {
-		   		val resource = res.split(Utils.parsedelimeter)
-		   		val apd = new AptekaDistance(resource(0), resource(1), distance(convert(resource(2).toDouble), convert(resource(3).toDouble)))
-		   		if(queue.length < Utils.capacity || (queue.length >= Utils.capacity && queue.head.compare(apd) > 0)) {
-					queue.+=(apd)
-				}
-				if(queue.length > Utils.capacity)
-					queue.dequeue()
-		   	} catch {
-		   	  	case t: Exception => None
-		   	}
-		}
+		val lines = Source.fromFile(filename).getLines().drop(1)
 		
-		queue.foreach(println)
+		val queue: PriorityQueue[AptekaDistance] = lines.foldLeft(new PriorityQueue[AptekaDistance]())
+		{ (q, el) =>
+		    
+		  val resource = el.split(Utils.parsedelimeter)
+		  val apd = new AptekaDistance(resource(0), resource(1), distance(convert(resource(2).toDouble), convert(resource(3).toDouble)))
+		  if(q.length < Utils.capacity || (q.length >= Utils.capacity && q.head.compare(apd) > 0)) {
+			q.+=(apd)
+			if(q.length > Utils.capacity)
+				q.dequeue()
+		  }
+		  q
+		}
 		
 		val fw = new FileWriter("result.csv", false)
 		
@@ -48,8 +53,7 @@ object GisApplication extends App {
 		}
 		finally fw.close() 
 	
-	} catch {
-		case t: Exception => throw new IllegalArgumentException(t) 
+	} else {
+		throw new IllegalArgumentException("Longitude and latitude are not in double format") 
 	}
-	  
 }
